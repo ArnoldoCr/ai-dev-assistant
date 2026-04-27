@@ -1,66 +1,17 @@
 import { useState, useEffect, useRef } from "react";
 import { sendToAI } from "../services/api";
+import MessageBubble from "./MessageBubble";
 
 const buildPrompt = (mode, input) => {
   const base = `
 Eres un desarrollador de software experto.
-
-Responde de forma:
-- Directa
-- Clara
-- Práctica
-
-NO seas académico.
-NO des explicaciones largas innecesarias.
-NO inventes contexto.
-
+Responde de forma directa, clara y práctica.
+NO seas académico. NO des explicaciones largas innecesarias.
 Si el input no es código, responde en una sola línea.
 `;
-
-  if (mode === "debug") {
-    return `
-${base}
-
-Input:
-${input}
-
-Si es código:
-- Indica el error
-- Da solución clara
-
-Si NO es código:
-- Responde: "No hay código para depurar."
-`;
-  }
-
-  if (mode === "optimize") {
-    return `
-${base}
-
-Input:
-${input}
-
-Si es código:
-- Mejora el código
-- Explica brevemente
-
-Si NO es código:
-- Responde: "No hay código para optimizar."
-`;
-  }
-
-  return `
-${base}
-
-Input:
-${input}
-
-Si es código:
-- Explica de forma sencilla
-
-Si NO es código:
-- Responde: "No es código, no hay nada que explicar."
-`;
+  if (mode === "debug") return `${base}\nInput:\n${input}\n\nSi es código: indica el error y da solución clara.\nSi NO es código: responde "No hay código para depurar."`;
+  if (mode === "optimize") return `${base}\nInput:\n${input}\n\nSi es código: mejora el código y explica brevemente.\nSi NO es código: responde "No hay código para optimizar."`;
+  return `${base}\nInput:\n${input}\n\nSi es código: explica de forma sencilla.\nSi NO es código: responde "No es código, no hay nada que explicar."`;
 };
 
 export default function ChatBox({ mode }) {
@@ -71,111 +22,74 @@ export default function ChatBox({ mode }) {
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+  }, [messages, loading]);
 
   const handleSend = async () => {
-    if (!input.trim()) return;
-
-    const userMessage = { role: "user", text: input };
+    if (!input.trim() || loading) return;
+    const userMessage = { role: "user", text: input, time: new Date() };
     setMessages((prev) => [...prev, userMessage]);
     setInput("");
     setLoading(true);
-
     const prompt = buildPrompt(mode, input);
     const res = await sendToAI(prompt);
-
-    const aiMessage = { role: "ai", text: res };
-    setMessages((prev) => [...prev, aiMessage]);
-
+    setMessages((prev) => [...prev, { role: "ai", text: res, time: new Date() }]);
     setLoading(false);
   };
 
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleSend();
+    }
+  };
+
+  const clearChat = () => setMessages([]);
+
   return (
-    <div>
-
-      {/* CHAT */}
-      <div style={{
-        minHeight: 400,
-        maxHeight: 400,
-        overflowY: "auto",
-        marginBottom: 15
-      }}>
-        {messages.map((msg, index) => (
-          <div
-            key={index}
-            style={{
-              display: "flex",
-              justifyContent: msg.role === "user" ? "flex-end" : "flex-start",
-              marginBottom: 10
-            }}
-          >
-            <div style={{
-              padding: 10,
-              borderRadius: 12,
-              background: msg.role === "user" ? "#2563eb" : "#1e293b",
-              maxWidth: "70%",
-              whiteSpace: "pre-wrap"
-            }}>
-              {msg.text}
-
-              {msg.role === "ai" && (
-                <div style={{ marginTop: 5 }}>
-                  <button
-                    onClick={() => navigator.clipboard.writeText(msg.text)}
-                    style={{
-                      fontSize: 12,
-                      background: "transparent",
-                      border: "none",
-                      color: "#60a5fa",
-                      cursor: "pointer"
-                    }}
-                  >
-                    Copiar
-                  </button>
-                </div>
-              )}
-            </div>
+    <div className="chatbox">
+      <div className="chat-messages">
+        {messages.length === 0 && (
+          <div className="empty-state">
+            <span className="empty-icon">🤖</span>
+            <p>Pega tu código y selecciona un modo</p>
+            <span className="empty-hint">Debug · Optimize · Explain</span>
           </div>
+        )}
+
+        {messages.map((msg, index) => (
+          <MessageBubble key={index} msg={msg} />
         ))}
 
-        {loading && <p style={{ color: "#94a3b8" }}>Pensando...</p>}
+        {loading && (
+          <div className="typing-indicator">
+            <div className="typing-avatar">🤖</div>
+            <div className="typing-dots">
+              <span /><span /><span />
+            </div>
+          </div>
+        )}
 
         <div ref={bottomRef} />
       </div>
 
-      {/* INPUT */}
-      <div style={{ display: "flex", gap: 10 }}>
+      <div className="chat-input-area">
         <textarea
-          rows={2}
+          rows={3}
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          placeholder="Escribe aquí..."
-          style={{
-            flex: 1,
-            background: "#1e293b",
-            color: "white",
-            border: "none",
-            borderRadius: 8,
-            padding: 10
-          }}
+          onKeyDown={handleKeyDown}
+          placeholder="Pega tu código aquí... (Enter para enviar, Shift+Enter para nueva línea)"
+          className="chat-input"
         />
-
-        <button
-          onClick={handleSend}
-          disabled={loading}
-          style={{
-            background: "#3b82f6",
-            border: "none",
-            color: "white",
-            padding: "10px 15px",
-            borderRadius: 8,
-            cursor: "pointer"
-          }}
-        >
-          Enviar
-        </button>
+        <div className="input-actions">
+          <button onClick={clearChat} className="btn-clear">
+            🗑️ Limpiar
+          </button>
+          <button onClick={handleSend} disabled={loading} className="btn-send">
+            {loading ? "..." : "Enviar ➤"}
+          </button>
+        </div>
       </div>
-
     </div>
   );
 }
