@@ -6,15 +6,32 @@ import dotenv from "dotenv";
 dotenv.config();
 
 const app = express();
+
+// 🔧 Config
+const PORT = process.env.PORT || 3001;
+const API_KEY = process.env.GEMINI_API_KEY;
+const MODEL = process.env.GEMINI_MODEL || "gemini-3-flash-preview";
+
+// 🛡️ Validación básica
+if (!API_KEY) {
+  throw new Error("Falta GEMINI_API_KEY en el archivo .env");
+}
+
+// 🔌 Middlewares
 app.use(cors());
 app.use(express.json());
 
+// 🚀 Endpoint IA
 app.post("/api/ai", async (req, res) => {
   try {
     const { prompt } = req.body;
 
+    if (!prompt) {
+      return res.status(400).json({ error: "El prompt es requerido" });
+    }
+
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${process.env.GEMINI_API_KEY}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${API_KEY}`,
       {
         method: "POST",
         headers: {
@@ -32,16 +49,25 @@ app.post("/api/ai", async (req, res) => {
 
     const data = await response.json();
 
+    // 🧠 Manejo seguro de respuesta
     const text =
-      data.candidates?.[0]?.content?.parts?.[0]?.text ||
+      data?.candidates?.[0]?.content?.parts?.[0]?.text ||
       "Sin respuesta";
 
     res.json({ text });
 
   } catch (error) {
-    console.error(error);
+    console.error("Error en /api/ai:", error);
     res.status(500).json({ error: "Error con Gemini" });
   }
 });
 
-app.listen(3001, () => console.log("Backend corriendo con Gemini 🚀"));
+// 🟢 Health check (muy útil para deploy)
+app.get("/", (req, res) => {
+  res.send("API AI Dev Assistant corriendo 🚀");
+});
+
+// 🎧 Server
+app.listen(PORT, () => {
+  console.log(`Backend corriendo con Gemini 🚀 en puerto ${PORT}`);
+});
