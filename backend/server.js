@@ -21,9 +21,9 @@ if (!API_KEY) {
 app.use(cors({
   origin: [
     "http://localhost:5173",
-    "https://ai-dev-assistant.vercel.app" // ← la reemplazamos después con la URL real
+    "https://ai-dev-assistant-9fa9ljuay-arnoldocallejasr-9533s-projects.vercel.app"
   ],
-  methods: ["GET", "POST"],
+  methods: ["GET", "POST", "OPTIONS"],
   allowedHeaders: ["Content-Type"]
 }));
 app.use(express.json());
