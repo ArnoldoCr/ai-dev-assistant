@@ -18,7 +18,14 @@ if (!API_KEY) {
 }
 
 // 🔌 Middlewares
-app.use(cors());
+app.use(cors({
+  origin: [
+    "http://localhost:5173",
+    "https://ai-dev-assistant.vercel.app" // ← la reemplazamos después con la URL real
+  ],
+  methods: ["GET", "POST"],
+  allowedHeaders: ["Content-Type"]
+}));
 app.use(express.json());
 
 // 🚀 Endpoint IA
