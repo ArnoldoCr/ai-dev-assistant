@@ -22,7 +22,7 @@ app.use(cors({
   origin: [
     "http://localhost:5173",
     "https://ai-dev-assistant-9fa9ljuay-arnoldocallejasr-9533s-projects.vercel.app",
-    "https://ai-dev-assistant-dun.vercel.app/"
+    "https://ai-dev-assistant-dun.vercel.app"
   ],
   methods: ["GET", "POST", "OPTIONS"],
   allowedHeaders: ["Content-Type"]
