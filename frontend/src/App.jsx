@@ -17,6 +17,17 @@ function App() {
         <div className="sidebar-footer">
           <span className="powered-by">Powered by</span>
           <span className="gemini-badge">✦ Gemini</span>
+          <div className="sidebar-divider" />
+          <span className="app-version">v{__APP_VERSION__}</span>
+          <span className="app-author">by Arnoldo Callejas</span>
+          <a
+            href="https://github.com/ArnoldoCr"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="sidebar-github"
+          >
+            ⌥ GitHub
+          </a>
         </div>
       </div>
 
