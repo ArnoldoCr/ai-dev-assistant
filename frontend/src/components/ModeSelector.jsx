@@ -1,25 +1,23 @@
-const modes = ["debug", "optimize", "explain"];
+const modes = [
+  { id: "debug", icon: "🐛", label: "Debug" },
+  { id: "optimize", icon: "⚡", label: "Optimize" },
+  { id: "explain", icon: "💡", label: "Explain" },
+];
 
 export default function ModeSelector({ mode, setMode }) {
   return (
-    <div style={{ marginBottom: 15 }}>
+    <nav className="mode-selector">
       {modes.map((m) => (
         <button
-          key={m}
-          onClick={() => setMode(m)}
-          style={{
-            marginRight: 10,
-            padding: "6px 12px",
-            borderRadius: 8,
-            border: "none",
-            cursor: "pointer",
-            background: mode === m ? "#3b82f6" : "#1e293b",
-            color: "white"
-          }}
+          key={m.id}
+          onClick={() => setMode(m.id)}
+          className={`mode-btn ${mode === m.id ? "active" : ""}`}
         >
-          {m}
+          <span className="mode-icon">{m.icon}</span>
+          <span className="mode-btn-label">{m.label}</span>
+          {mode === m.id && <span className="active-indicator" />}
         </button>
       ))}
-    </div>
+    </nav>
   );
 }
