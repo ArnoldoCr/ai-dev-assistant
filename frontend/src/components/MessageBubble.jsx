@@ -3,12 +3,27 @@ import { useState } from "react";
 const formatTime = (date) =>
   date.toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit" });
 
+// Parsea **negrita** dentro de texto plano
+const renderInline = (text, key) => {
+  const parts = text.split(/(\*\*.*?\*\*)/g);
+  return (
+    <span key={key}>
+      {parts.map((p, i) =>
+        p.startsWith("**") && p.endsWith("**")
+          ? <strong key={i}>{p.slice(2, -2)}</strong>
+          : <span key={i}>{p}</span>
+      )}
+    </span>
+  );
+};
+
 const renderText = (text) => {
   const parts = text.split(/(```[\s\S]*?```)/g);
   return parts.map((part, i) => {
+    // Bloque de código
     if (part.startsWith("```")) {
       const lines = part.split("\n");
-      const lang = lines.replace("```", "").trim() || "code";
+      const lang = lines[0].replace("```", "").trim() || "code"; // ← fix
       const code = lines.slice(1, -1).join("\n");
       return (
         <div key={i} className="code-block">
@@ -17,7 +32,18 @@ const renderText = (text) => {
         </div>
       );
     }
-    return <span key={i}>{part}</span>;
+
+    // Texto normal — parsea negritas y saltos de línea
+    return (
+      <span key={i}>
+        {part.split("\n").map((line, j) => (
+          <span key={j}>
+            {renderInline(line, j)}
+            {j < part.split("\n").length - 1 && <br />}
+          </span>
+        ))}
+      </span>
+    );
   });
 };
 
